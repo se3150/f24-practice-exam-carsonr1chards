@@ -1,0 +1,40 @@
+name: Run Tests
+on: [push]
+jobs:
+  RunUnitTests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Install pytest
+        run: pip install pytest pytest-spec pytest-describe
+      - name: Run pytest
+        run: pytest --spec --color=yes test_battery.py
+  RunFunctionalTests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip xvfb libgconf-2-4 libnss3 libasound2 libx11-xcb1
+          wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y ./google-chrome-stable_current_amd64.deb
+          pip install behave behave-webdriver selenium
+
+      - name: Set up ChromeDriver
+        uses: nanasess/setup-chromedriver@master
+        with:
+          google-chrome: 'stable'
+
+      - name: Start Xvfb (Virtual Display for Chrome)
+        run: |
+          export DISPLAY=:99
+          Xvfb :99 -ac &
+
+      - name: Run behave tests
+        run: |
+          export DISPLAY=:99
+          behave
